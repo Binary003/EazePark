@@ -1,0 +1,8 @@
+body{
+  background-color: #fefce8;
+}
+input::-webkit-validation-bubble,
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  display: none !important;
+}
