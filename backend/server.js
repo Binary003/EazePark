@@ -8,7 +8,12 @@ const User = require("./models/User");
 const Booking = require("./models/Booking");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://eaze-park.vercel.app"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // ✅ Connect to MongoDB
