@@ -6,6 +6,9 @@ const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const User = require("./models/User");
 const Booking = require("./models/Booking");
+const connectDB = require('./db');
+require('dotenv').config();
+connectDB();
 
 const app = express();
 app.use(cors());
