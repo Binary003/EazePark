@@ -8,7 +8,7 @@ const User = require("./models/User");
 const Booking = require("./models/Booking");
 const connectDB = require('./db');
 require('dotenv').config();
-connectDB();
+connectDB()
 
 const app = express();
 
@@ -18,17 +18,13 @@ app.use(cors({
   credentials: true, // if using cookies or auth headers
 }));
 
+app.options("*", cors()); // Optional, handles preflight requests
+
+
 
 app.use(express.json());
 
-// ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-  })
-  .catch((err) => {
-    console.error("🔥 MongoDB Connection Error:", err);
-  });
+
 
 
 // ✅ Location Function
