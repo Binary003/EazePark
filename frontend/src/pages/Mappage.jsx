@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";  // <- add this
 import "leaflet/dist/leaflet.css";
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaDirections, FaRegBookmark } from "react-icons/fa";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl,
+});
 
 const MapUpdater = ({ center }) => {
   const map = useMap();
