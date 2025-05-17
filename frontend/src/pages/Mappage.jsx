@@ -151,12 +151,12 @@ const MapPage = () => {
     }
   };
 
-  const handleNavigate = (lat, lon) => {
-    window.open(
-      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
-      "_blank"
-    );
-  };
+ const handleNavigate = (lat, lon) => {
+  window.open(
+    `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
+    "_blank"
+  );
+};
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-50 pb-20">
