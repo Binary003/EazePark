@@ -21,7 +21,7 @@ const SignupPage = ({ onLoginClick }) => {
       return;
     }
 
-    const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/signup`, {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
