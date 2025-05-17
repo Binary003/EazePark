@@ -11,7 +11,13 @@ require('dotenv').config();
 connectDB();
 
 const app = express();
-app.use(cors());
+
+// Allow frontend to access backend
+app.use(cors({
+  origin: 'https://eaze-park.vercel.app', // only allow your frontend
+  credentials: true, // if using cookies or auth headers
+}));
+
 
 app.use(express.json());
 
