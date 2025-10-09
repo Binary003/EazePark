@@ -7,6 +7,7 @@ import LocDetails from "./pages/Locdetails";
 import PaymentGateways from "./pages/Paymentgateways";
 import Vehicledetails from "./pages/Vehicledetails";
 import TicketPage from "./pages/TicketPage";
+import ProviderRegister from "./pages/ProviderRegister";
 
 import "./App.css";
 
@@ -21,6 +22,7 @@ const App = () => {
       <Route path="/paymentgateways" element={<PaymentGateways />} />
       <Route path="/vehicledetails" element={<Vehicledetails />} />
       <Route path="/ticket" element={<TicketPage />} />
+      <Route path="/provider-register" element={<ProviderRegister />} />
     </Routes>
   );
 };

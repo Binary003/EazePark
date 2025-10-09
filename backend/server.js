@@ -1,33 +1,47 @@
 require("dotenv").config();
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
+
 const User = require("./models/User");
 const Booking = require("./models/Booking");
 const connectDB = require('./db');
-require('dotenv').config();
-connectDB()
 
-const app = express();
+// Connect to MongoDB
+connectDB();
 
-// Allow frontend to access backend
-app.use(cors({
-  origin: 'https://eaze-park.vercel.app', // only allow your frontend
-  credentials: true, // if using cookies or auth headers
-}));
+const app = express(); // Initialize app
 
-app.options("*", cors()); // Optional, handles preflight requests
-
-
-
+// Middleware
 app.use(express.json());
 
+const allowedOrigins = [
+  "https://eaze-park.vercel.app",
+  "http://localhost:5173"
+];
 
+const corsOptions = {
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
 
+app.use(cors(corsOptions));
 
-// ✅ Location Function
+// Serve static image uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ----------- LOCATION FUNCTION --------------
 const getLocationName = async (lat, lon) => {
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
@@ -39,7 +53,7 @@ const getLocationName = async (lat, lon) => {
   }
 };
 
-// ✅ Signup
+// ----------- SIGNUP ROUTE --------------
 app.post("/signup", async (req, res) => {
   const { name, email, phone, password } = req.body;
   if (!name || !email || !phone || !password) return res.status(400).json({ error: "All fields are required" });
@@ -57,7 +71,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// ✅ Login
+// ----------- LOGIN ROUTE --------------
 app.post("/login", async (req, res) => {
   const { emailOrPhone, password } = req.body;
   if (!emailOrPhone || !password) return res.status(400).json({ error: "Email/Phone and Password are required" });
@@ -76,7 +90,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// ✅ Book Parking
+// ----------- BOOKING ROUTE --------------
 app.post("/api/book-parking", async (req, res) => {
   const { userId, userLat, userLon, parkingId, parkingLat, parkingLon } = req.body;
   if (!userId || !userLat || !userLon || !parkingId || !parkingLat || !parkingLon) {
@@ -104,6 +118,65 @@ app.post("/api/book-parking", async (req, res) => {
   }
 });
 
-// ✅ Start Server
+// =============================================
+// 🔧 NEW PROVIDER FUNCTIONALITY STARTS BELOW 🔧
+// =============================================
+
+const Provider = require("./models/Provider");
+
+// Multer setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  },
+});
+const upload = multer({ storage });
+
+// POST: Register Provider
+app.post("/api/provider-register", upload.single("image"), async (req, res) => {
+  try {
+    const { name, email, phone, location, price } = req.body;
+    const image = req.file?.filename;
+
+    if (!name || !email || !phone || !location || !price || !image) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const provider = await Provider.create({
+      name,
+      email,
+      phone,
+      location,
+      price,
+      imageUrl: `/uploads/${image}`,
+    });
+
+    res.json({ message: "Provider registered successfully", provider });
+  } catch (error) {
+    console.error("Provider register error:", error);
+    res.status(500).json({ error: "Server error during provider registration" });
+  }
+});
+
+// GET: All Providers
+app.get("/api/providers", async (req, res) => {
+  try {
+    const providers = await Provider.find();
+    res.json(providers);
+  } catch (error) {
+    console.error("Fetch providers error:", error);
+    res.status(500).json({ error: "Failed to fetch providers" });
+  }
+});
+
+// =============================================
+// 🔚 PROVIDER FUNCTIONALITY ENDS HERE 🔚
+// =============================================
+
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

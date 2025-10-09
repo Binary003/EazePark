@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import L from "leaflet";  // <- add this
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -7,6 +7,7 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaDirections, FaRegBookmark } from "react-icons/fa";
+import Navbar from "./Navbar"; // Update path if needed
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -30,10 +31,11 @@ const MapPage = () => {
   const [searchLocation, setSearchLocation] = useState("");
   const [mapCenter, setMapCenter] = useState(null);
   const [parkingLocations, setParkingLocations] = useState([]);
+  const [providerLocations, setProviderLocations] = useState([]); // ✅ New state
   const [userLocation, setUserLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const userId =
-    sessionStorage.getItem("userId") || localStorage.getItem("userId"); // ✅ Store userId at the start
+    sessionStorage.getItem("userId") || localStorage.getItem("userId");
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -43,12 +45,14 @@ const MapPage = () => {
         setUserLocation([lat, lon]);
         setMapCenter([lat, lon]);
         fetchParkingLocations(lat, lon);
+        fetchProviderLocations(); // ✅ Call new fetch function
       },
       () => {
         const defaultCoords = [28.6139, 77.209];
         setUserLocation(defaultCoords);
         setMapCenter(defaultCoords);
         fetchParkingLocations(defaultCoords[0], defaultCoords[1]);
+        fetchProviderLocations(); // ✅ Call new fetch function
       }
     );
   }, []);
@@ -74,6 +78,41 @@ const MapPage = () => {
       console.error("Error fetching parking locations:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProviderLocations = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/providers`
+      );
+      const data = await response.json();
+
+      // Validate and filter invalid location data
+      const formatted = data
+        .map((provider, index) => {
+          if (!provider.location) return null; // skip if no location
+
+          const parts = provider.location.split(",");
+          if (parts.length !== 2) return null; // invalid format
+
+          const lat = parseFloat(parts[0]);
+          const lon = parseFloat(parts[1]);
+
+          if (isNaN(lat) || isNaN(lon)) return null; // invalid lat/lon
+
+          return {
+            id: `provider-${index}`,
+            lat,
+            lon,
+            name: provider.name + " (Provider)",
+          };
+        })
+        .filter(Boolean); // remove null entries
+
+      setProviderLocations(formatted);
+    } catch (error) {
+      console.error("Error fetching provider locations:", error);
     }
   };
 
@@ -133,7 +172,7 @@ const MapPage = () => {
     }
 
     const bookingData = {
-      userId, // ✅ Use stored userId instead of fetching from localStorage every time
+      userId,
       userLat: userLocation[0],
       userLon: userLocation[1],
       parkingId: parkingSpot.id,
@@ -143,11 +182,14 @@ const MapPage = () => {
     };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/book-parking`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/book-parking`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData),
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -162,13 +204,12 @@ const MapPage = () => {
     }
   };
 
-const handleNavigate = (lat, lon) => {
-  window.open(
-    `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
-    "_blank"
-  );
- };
-
+  const handleNavigate = (lat, lon) => {
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
+      "_blank"
+    );
+  };
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-50 pb-20">
@@ -215,6 +256,30 @@ const handleNavigate = (lat, lon) => {
                   <Popup>{location.name}</Popup>
                 </Marker>
               ))}
+              {providerLocations.map((provider) => {
+                if (
+                  !provider ||
+                  typeof provider.lat !== "number" ||
+                  typeof provider.lon !== "number" ||
+                  isNaN(provider.lat) ||
+                  isNaN(provider.lon)
+                ) {
+                  return null; // skip invalid data
+                }
+                return (
+                  <Marker
+                    key={provider.id}
+                    position={[provider.lat, provider.lon]}
+                    icon={L.icon({
+                      iconUrl:
+                        "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+                      iconSize: [30, 30],
+                    })}
+                  >
+                    <Popup>{provider.name}</Popup>
+                  </Marker>
+                );
+              })}
             </MapContainer>
           )
         )}
@@ -245,6 +310,7 @@ const handleNavigate = (lat, lon) => {
           </div>
         ))}
       </div>
+      <Navbar />
     </div>
   );
 };
