@@ -26,10 +26,17 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
+    
+    // Allow any Vercel domain (for preview deployments)
+    if (origin.includes('.vercel.app')) return callback(null, true);
+    
+    // Allow specific origins
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log(`❌ CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -159,6 +166,11 @@ const geocodeAddress = async (address) => {
 // POST: Register Provider
 app.post("/api/provider-register", upload.single("image"), async (req, res) => {
   try {
+    console.log("📝 NEW PROVIDER REGISTRATION REQUEST:");
+    console.log("  Headers:", req.headers);
+    console.log("  Body:", req.body);
+    console.log("  File:", req.file);
+    
     const { name, email, phone, location, price } = req.body;
     const image = req.file?.filename;
     

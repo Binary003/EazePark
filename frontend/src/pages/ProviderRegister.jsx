@@ -132,6 +132,12 @@ const ProviderRegister = () => {
     });
 
     try {
+      console.log(
+        "🚀 Submitting to:",
+        `${import.meta.env.VITE_API_BASE_URL}/api/provider-register`
+      );
+      console.log("📝 Form data:", Object.fromEntries(data));
+
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/provider-register`,
         {
@@ -140,14 +146,20 @@ const ProviderRegister = () => {
         }
       );
 
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers));
+
       const text = await response.text();
+      console.log("📄 Raw response:", text);
 
       let result;
       try {
         result = JSON.parse(text);
       } catch {
         console.error("❌ Failed to parse JSON:", text);
-        throw new Error("Invalid server response");
+        throw new Error(
+          `Invalid server response. Status: ${response.status}, Response: ${text}`
+        );
       }
 
       if (response.ok) {
@@ -167,8 +179,13 @@ const ProviderRegister = () => {
       }
     } catch (error) {
       console.error("❌ Error submitting form:", error);
+      console.error("❌ Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
       setSubmitStatus("error");
-      alert("An error occurred. Please try again.");
+      alert(`❌ Registration failed: ${error.message}`);
     }
   };
 
