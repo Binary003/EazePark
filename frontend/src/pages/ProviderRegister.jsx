@@ -33,7 +33,9 @@ const ProviderRegister = () => {
   // Fetch registered locations
   const fetchRegisteredLocations = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/providers`);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/providers`
+      );
       const data = await response.json();
       setRegisteredLocations(data);
     } catch (error) {
@@ -43,30 +45,38 @@ const ProviderRegister = () => {
 
   // Delete a registered location
   const handleDeleteLocation = async (locationId, locationName) => {
-    console.log('Attempting to delete provider:', { locationId, locationName });
-    
+    console.log("Attempting to delete provider:", { locationId, locationName });
+
     if (window.confirm(`Are you sure you want to delete "${locationName}"?`)) {
       try {
-        const deleteUrl = `${import.meta.env.VITE_API_BASE_URL}/api/providers/${locationId}`;
-        console.log('DELETE URL:', deleteUrl);
-        
-        const response = await fetch(deleteUrl, { method: 'DELETE' });
-        
-        console.log('Delete response status:', response.status);
-        
+        const deleteUrl = `${
+          import.meta.env.VITE_API_BASE_URL
+        }/api/providers/${locationId}`;
+        console.log("DELETE URL:", deleteUrl);
+
+        const response = await fetch(deleteUrl, { method: "DELETE" });
+
+        console.log("Delete response status:", response.status);
+
         if (response.ok) {
           const result = await response.json();
-          console.log('Delete successful:', result);
-          alert('Parking location deleted successfully!');
+          console.log("Delete successful:", result);
+          alert("Parking location deleted successfully!");
           fetchRegisteredLocations(); // Refresh the list
         } else {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          console.error('Delete failed:', errorData);
-          alert(`Failed to delete parking location: ${errorData.error || 'Unknown error'}`);
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: "Unknown error" }));
+          console.error("Delete failed:", errorData);
+          alert(
+            `Failed to delete parking location: ${
+              errorData.error || "Unknown error"
+            }`
+          );
         }
       } catch (error) {
         console.error("Error deleting location:", error);
-        alert('Error deleting parking location');
+        alert("Error deleting parking location");
       }
     }
   };
@@ -423,7 +433,7 @@ const ProviderRegister = () => {
                   onClick={() => setShowManageSection(!showManageSection)}
                   className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-colors duration-200"
                 >
-                  {showManageSection ? 'Hide' : 'View'}
+                  {showManageSection ? "Hide" : "View"}
                 </button>
               </div>
             </div>
@@ -433,7 +443,9 @@ const ProviderRegister = () => {
                 {registeredLocations.length === 0 ? (
                   <div className="text-center py-8">
                     <FaMapMarkerAlt className="text-gray-300 text-6xl mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg">No parking locations registered yet</p>
+                    <p className="text-gray-500 text-lg">
+                      No parking locations registered yet
+                    </p>
                   </div>
                 ) : (
                   <div className="grid gap-6">
@@ -453,8 +465,8 @@ const ProviderRegister = () => {
                                 {location.displayAddress || location.location}
                               </p>
                               <p className="flex items-center">
-                                <FaRupeeSign className="mr-2 text-green-500" />
-                                ₹{location.price}/hour
+                                <FaRupeeSign className="mr-2 text-green-500" />₹
+                                {location.price}/hour
                               </p>
                               <p className="flex items-center">
                                 <FaEnvelope className="mr-2 text-blue-500" />
@@ -466,9 +478,11 @@ const ProviderRegister = () => {
                               </p>
                             </div>
                           </div>
-                          
+
                           <button
-                            onClick={() => handleDeleteLocation(location._id, location.name)}
+                            onClick={() =>
+                              handleDeleteLocation(location._id, location.name)
+                            }
                             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors duration-200"
                           >
                             <FaTrash />

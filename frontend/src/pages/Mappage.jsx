@@ -66,51 +66,51 @@ const MapPage = () => {
 
     try {
       const response = await fetch(overpassUrl);
-      
+
       // Handle rate limiting from Overpass API
       if (response.status === 429) {
         console.log("Overpass API rate limited, using fallback data");
         setParkingLocations([]);
         return;
       }
-      
+
       const data = await response.json();
-      
+
       if (data.elements) {
         // Limit to first 6 parking spots to reduce API load
         const limitedElements = data.elements.slice(0, 6);
         const locations = [];
-        
+
         // Process sequentially to avoid rate limiting
         for (let i = 0; i < limitedElements.length; i++) {
           const node = limitedElements[i];
-          
+
           try {
             // Get real location name with better error handling
             const locationName = await fetchLocationName(node.lat, node.lon);
-            
-            locations.push({ 
-              id: node.id, 
-              lat: node.lat, 
-              lon: node.lon, 
-              name: locationName || `Parking Area ${i + 1}`
+
+            locations.push({
+              id: node.id,
+              lat: node.lat,
+              lon: node.lon,
+              name: locationName || `Parking Area ${i + 1}`,
             });
-            
+
             // Longer delay between API calls to prevent rate limiting
             if (i < limitedElements.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 1500));
+              await new Promise((resolve) => setTimeout(resolve, 1500));
             }
           } catch (error) {
             // Fallback if individual location fetch fails
-            locations.push({ 
-              id: node.id, 
-              lat: node.lat, 
-              lon: node.lon, 
-              name: `Parking Area ${i + 1}`
+            locations.push({
+              id: node.id,
+              lat: node.lat,
+              lon: node.lon,
+              name: `Parking Area ${i + 1}`,
             });
           }
         }
-        
+
         setParkingLocations(locations);
       }
     } catch (error) {
@@ -207,9 +207,13 @@ const MapPage = () => {
               provider.lat,
               provider.lon
             );
-            
-            console.log(`Provider ${provider.name}: ${distance.toFixed(2)}km from search location`);
-            
+
+            console.log(
+              `Provider ${provider.name}: ${distance.toFixed(
+                2
+              )}km from search location`
+            );
+
             // Reduced radius to 25km for more precise filtering
             return distance <= 25; // 25km radius
           }
@@ -236,41 +240,42 @@ const MapPage = () => {
       }
 
       const data = await response.json();
-      
+
       // Create a meaningful location name from address components
       if (data.address) {
         const components = [];
-        
+
         // Add specific place name if available
         if (data.address.amenity) components.push(data.address.amenity);
         if (data.address.building) components.push(data.address.building);
         if (data.address.shop) components.push(data.address.shop);
-        
+
         // Add area information
-        const area = data.address.neighbourhood || 
-                    data.address.suburb || 
-                    data.address.city_district ||
-                    data.address.village ||
-                    data.address.town;
-                    
+        const area =
+          data.address.neighbourhood ||
+          data.address.suburb ||
+          data.address.city_district ||
+          data.address.village ||
+          data.address.town;
+
         if (area) components.push(area);
-        
+
         // Add city if different from area
         if (data.address.city && data.address.city !== area) {
           components.push(data.address.city);
         }
-        
+
         if (components.length > 0) {
           return components.slice(0, 2).join(", "); // Limit to 2 components
         }
       }
-      
+
       // Fallback to display name
       if (data.display_name) {
         const parts = data.display_name.split(",");
         return parts.slice(0, 2).join(",").trim();
       }
-      
+
       return null; // Return null to use fallback naming
     } catch (error) {
       console.log("Location name fetch failed:", error.message);
