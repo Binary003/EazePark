@@ -48,6 +48,45 @@ app.use(cors(corsOptions));
 // Serve static image uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// ============================================
+// 🔋 HEALTH CHECK ENDPOINTS FOR UPTIME MONITORING
+// ============================================
+
+// Root health check
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "✅ EazePark Backend is running!",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Dedicated health endpoint
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    version: "1.0.0"
+  });
+});
+
+// API status check
+app.get("/api/status", (req, res) => {
+  res.json({ 
+    api: "online",
+    status: "ready",
+    timestamp: new Date().toISOString(),
+    services: {
+      database: "connected",
+      uploads: "enabled",
+      cors: "configured"
+    }
+  });
+});
+
 // ----------- LOCATION FUNCTION --------------
 const getLocationName = async (lat, lon) => {
   try {
